@@ -240,6 +240,7 @@ async function sendAutoReply(emailMessageId, autoReplyId) {
     secure: config.smtpSecure,
     auth: { user: config.email, pass: config.appPassword },
     tls: { rejectUnauthorized: false },
+    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 15000,

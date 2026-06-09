@@ -365,6 +365,7 @@ exports.testSmtp = async (req, res) => {
       secure: config.smtpSecure,
       auth: { user: config.email, pass: config.appPassword },
       tls: { rejectUnauthorized: false },
+      family: 4,
       connectionTimeout: 15000,
       greetingTimeout: 15000,
     });
@@ -456,6 +457,7 @@ exports.postSendManualReply = async (req, res) => {
       host: config.smtpHost, port: config.smtpPort, secure: config.smtpSecure,
       auth: { user: config.email, pass: config.appPassword },
       tls: { rejectUnauthorized: false },
+      family: 4,
       connectionTimeout: 10000, greetingTimeout: 10000, socketTimeout: 15000,
     });
 

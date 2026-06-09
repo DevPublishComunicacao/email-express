@@ -3,6 +3,21 @@ const path = require("path");
 
 const SENDGRID_API = "https://api.sendgrid.com/v3/mail/send";
 
+const MIME_TYPES = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".gif": "image/gif",
+  ".webp": "image/webp",
+  ".svg": "image/svg+xml",
+  ".pdf": "application/pdf",
+};
+
+function mimeType(filename) {
+  const ext = path.extname(filename).toLowerCase();
+  return MIME_TYPES[ext] || "application/octet-stream";
+}
+
 function getApiKey() {
   return process.env.SENDGRID_API_KEY;
 }
@@ -18,8 +33,8 @@ async function sendMail({ from, to, subject, html, text, attachments }) {
   const personalizations = [{ to: [{ email: to }] }];
 
   const content = [];
-  if (html) content.push({ type: "text/html", value: html });
   if (text) content.push({ type: "text/plain", value: text });
+  if (html) content.push({ type: "text/html", value: html });
 
   const payload = {
     personalizations,
@@ -38,7 +53,7 @@ async function sendMail({ from, to, subject, html, text, attachments }) {
       return {
         content: contentBase64,
         filename,
-        type: att.contentType || att.cid ? "image/png" : undefined,
+        type: mimeType(filename),
         disposition: att.cid ? "inline" : "attachment",
         content_id: att.cid || undefined,
       };

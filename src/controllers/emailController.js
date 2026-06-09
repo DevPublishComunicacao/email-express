@@ -24,6 +24,7 @@ exports.postSettings = async (req, res) => {
       return res.render("email-settings", { config, error: "E-mail e senha de app são obrigatórios.", success: null });
     }
 
+    const smtpPortNum = parseInt(smtpPort, 10) || 587;
     const data = {
       email,
       appPassword,
@@ -31,8 +32,8 @@ exports.postSettings = async (req, res) => {
       imapPort: parseInt(imapPort, 10) || 993,
       imapSecure: true,
       smtpHost: smtpHost || "smtp.gmail.com",
-      smtpPort: parseInt(smtpPort, 10) || 587,
-      smtpSecure: false,
+      smtpPort: smtpPortNum,
+      smtpSecure: smtpPortNum === 465,
     };
 
     try {

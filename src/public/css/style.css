@@ -1498,9 +1498,9 @@ body {
 .toggle-replies-btn {
   width: 100%;
   justify-content: center;
-  background: var(--primary-light);
-  color: var(--primary);
-  border: 1.5px solid var(--primary-subtle);
+  background: #dbeafe;
+  color: #1d4ed8;
+  border: 1.5px solid #bfdbfe;
   font-size: 13px;
   font-weight: 600;
   padding: 8px 14px;
@@ -1508,9 +1508,9 @@ body {
 }
 
 .toggle-replies-btn:hover {
-  background: var(--primary-subtle);
-  color: var(--primary-hover);
-  border-color: var(--primary);
+  background: #bfdbfe;
+  color: #1e40af;
+  border-color: #93c5fd;
 }
 
 .sent-replies-list {

@@ -334,7 +334,7 @@
       } catch (err) {
         hideLoading();
         if (err.name === 'AbortError') { alert('Tempo limite excedido.'); }
-        else { alert('Erro de conexão.'); }
+        else { alert('Erro de conexão: ' + err.message); }
       }
     });
   });
@@ -373,7 +373,7 @@
         if (err.name === 'AbortError') {
           alert('Tempo limite excedido ao enviar resposta. Verifique sua configuração SMTP.');
         } else {
-          alert('Erro de conexão ao enviar resposta.');
+          alert('Erro de conexão: ' + err.message);
         }
       }
     });

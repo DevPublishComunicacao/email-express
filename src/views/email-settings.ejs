@@ -17,20 +17,43 @@
 
   <div class="card">
     <div class="card-body">
-      <div class="info-box">
+      <div class="security-checklist">
+        <h4><i class="fas fa-shield-alt"></i> Checklist de Segurança</h4>
+        <p>Antes de configurar, siga estes passos na sua conta Google:</p>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Acesse sua <a href="https://myaccount.google.com/security" target="_blank">Conta Google</a> (segurança)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Ative a <strong>Verificação em duas etapas</strong> (2FA)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Acesse <a href="https://myaccount.google.com/apppasswords" target="_blank">Senhas de app</a></span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Clique em <strong>"Selecionar app" → "E-mail"</strong> e depois em <strong>"Gerar"</strong></span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Copie a senha de <strong>16 caracteres</strong> gerada (sem espaços)</span>
+        </label>
+        <label class="checklist-item">
+          <input type="checkbox" onchange="this.nextElementSibling.classList.toggle('checked')" />
+          <span>Cole a senha no campo abaixo e clique em <strong>"Salvar"</strong></span>
+        </label>
+      </div>
+
+      <div class="info-box" style="margin-top:16px">
         <i class="fas fa-info-circle"></i>
         <div>
-          <strong>Como obter sua senha de app do Gmail:</strong>
-          <ol>
-            <li>Acesse sua <a href="https://myaccount.google.com/security" target="_blank">Conta Google</a> (segurança)</li>
-            <li>Ative a <strong>Verificação em duas etapas</strong> se ainda não estiver ativa</li>
-            <li>Acesse diretamente: <a href="https://myaccount.google.com/apppasswords" target="_blank">https://myaccount.google.com/apppasswords</a></li>
-            <li>Se não encontrar, pesquise por "Senhas de app" nas configurações da sua Conta Google</li>
-            <li>Selecione "E-mail" e seu dispositivo, clique em "Gerar"</li>
-            <li>Copie a senha gerada (16 caracteres sem espaços) e cole abaixo</li>
-          </ol>
+          <strong>Aviso para hospedagem no Render (Free Tier):</strong>
+          <p style="margin:4px 0 0">O Render <strong>bloqueia portas SMTP</strong> (587, 465) no plano gratuito desde Setembro/2025. Para enviar e-mails, você precisa <a href="https://render.com/docs/free#free-web-services" target="_blank">fazer upgrade para um plano pago</a> ou usar serviços como SendGrid.</p>
         </div>
       </div>
+
 
       <form action="/email/config" method="POST" class="email-config-form">
         <div class="form-group">

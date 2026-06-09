@@ -124,8 +124,8 @@ async function checkAndRespond(userId) {
                   auth: { user: config.email, pass: config.appPassword },
                   tls: { rejectUnauthorized: false },
                   family: 4,
-                  connectionTimeout: 10000,
-                  greetingTimeout: 10000,
+                  connectionTimeout: 30000,
+                  greetingTimeout: 30000,
                   socketTimeout: 15000,
                 });
 

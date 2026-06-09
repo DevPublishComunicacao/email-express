@@ -25,6 +25,10 @@ app.use(
       conString: process.env.DATABASE_URL,
       tableName: "session",
       createTableIfMissing: true,
+      ssl:
+        process.env.NODE_ENV === "production"
+          ? { rejectUnauthorized: false }
+          : false,
     }),
     secret: process.env.SESSION_SECRET || "fallback-secret",
     resave: false,

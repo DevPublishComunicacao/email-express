@@ -1498,15 +1498,19 @@ body {
 .toggle-replies-btn {
   width: 100%;
   justify-content: center;
-  background: var(--bg);
-  color: var(--text-secondary);
-  border-color: transparent;
-  font-size: 12px;
+  background: var(--primary-light);
+  color: var(--primary);
+  border: 1.5px solid var(--primary-subtle);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 8px 14px;
+  border-radius: var(--radius-sm);
 }
 
 .toggle-replies-btn:hover {
-  background: var(--primary-light);
-  color: var(--primary);
+  background: var(--primary-subtle);
+  color: var(--primary-hover);
+  border-color: var(--primary);
 }
 
 .sent-replies-list {
@@ -1517,10 +1521,11 @@ body {
 }
 
 .sent-reply-item {
-  background: var(--bg);
+  background: var(--success-bg);
   border-radius: var(--radius-sm);
-  padding: 10px 12px;
-  border-left: 3px solid var(--success);
+  padding: 12px 14px;
+  border-left: 4px solid var(--success);
+  border: 1px solid var(--success-border);
 }
 
 .sent-reply-header {

@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const session = require("express-session");
+const pgSession = require("connect-pg-simple")(session);
 const passport = require("passport");
 const path = require("path");
 const { PrismaClient } = require("@prisma/client");
@@ -16,12 +17,23 @@ const app = express();
 app.use(express.urlencoded({ extended: false }));
 app.use(express.json());
 
+app.set("trust proxy", 1);
+
 app.use(
   session({
+    store: new pgSession({
+      conString: process.env.DATABASE_URL,
+      tableName: "session",
+      createTableIfMissing: true,
+    }),
     secret: process.env.SESSION_SECRET || "fallback-secret",
     resave: false,
-    saveUninitialized: true,
-    cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 },
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      sameSite: "lax",
+    },
   })
 );
 

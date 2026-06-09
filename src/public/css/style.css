@@ -1018,57 +1018,6 @@ body {
   color: var(--primary);
 }
 
-.security-checklist {
-  background: var(--success-bg);
-  border: 1px solid var(--success-border);
-  border-radius: var(--radius-sm);
-  padding: 20px;
-  margin-bottom: 20px;
-}
-
-.security-checklist h4 {
-  margin: 0 0 4px;
-  color: #065f46;
-  font-size: 16px;
-}
-
-.security-checklist h4 i {
-  color: var(--success);
-  margin-right: 6px;
-}
-
-.security-checklist > p {
-  margin: 0 0 12px;
-  font-size: 13px;
-  color: #065f46;
-}
-
-.checklist-item {
-  display: flex;
-  align-items: flex-start;
-  gap: 10px;
-  padding: 6px 0;
-  cursor: pointer;
-  font-size: 14px;
-}
-
-.checklist-item input[type="checkbox"] {
-  margin-top: 3px;
-  accent-color: var(--success);
-  width: 16px;
-  height: 16px;
-  cursor: pointer;
-}
-
-.checklist-item span {
-  flex: 1;
-}
-
-.checklist-item span.checked {
-  text-decoration: line-through;
-  opacity: 0.6;
-}
-
 /* ==================== FORMS ==================== */
 .email-config-form,
 .category-form,

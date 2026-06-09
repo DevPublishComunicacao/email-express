@@ -126,7 +126,7 @@ async function checkAndRespond(userId) {
                   family: 4,
                   connectionTimeout: 30000,
                   greetingTimeout: 30000,
-                  socketTimeout: 15000,
+                  socketTimeout: 45000,
                 });
 
                 const { html: htmlBody, attachments } = emailService.embedImages(replyBody);

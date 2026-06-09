@@ -243,7 +243,7 @@ async function sendAutoReply(emailMessageId, autoReplyId) {
     family: 4,
     connectionTimeout: 30000,
     greetingTimeout: 30000,
-    socketTimeout: 15000,
+    socketTimeout: 45000,
   });
 
   const subject = reply.subject

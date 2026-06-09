@@ -319,7 +319,7 @@
       showLoading('Enviando resposta...');
       try {
         var controller = new AbortController();
-        var timeout = setTimeout(function() { controller.abort(); }, 20000);
+        var timeout = setTimeout(function() { controller.abort(); }, 60000);
         var res = await fetch('/email/send-manual-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -353,7 +353,7 @@
       showLoading('Enviando resposta...');
       try {
         const controller = new AbortController();
-        const timeout = setTimeout(function() { controller.abort(); }, 20000);
+        const timeout = setTimeout(function() { controller.abort(); }, 60000);
         const res = await fetch('/email/send-reply', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

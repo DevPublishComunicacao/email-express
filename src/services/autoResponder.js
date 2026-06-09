@@ -3,6 +3,7 @@ const Imap = require("imap");
 const { simpleParser } = require("mailparser");
 const nodemailer = require("nodemailer");
 const emailService = require("./emailService");
+const sendgrid = require("./sendgridService");
 
 const prisma = new PrismaClient();
 
@@ -117,18 +118,6 @@ async function checkAndRespond(userId) {
 
                 console.log(`[AutoResponder] Enviando resposta automática para ${toAddress} (categoria: ${categoryName})`);
 
-                const transporter = nodemailer.createTransport({
-                  host: config.smtpHost,
-                  port: config.smtpPort,
-                  secure: config.smtpSecure,
-                  auth: { user: config.email, pass: config.appPassword },
-                  tls: { rejectUnauthorized: false },
-                  family: 4,
-                  connectionTimeout: 30000,
-                  greetingTimeout: 30000,
-                  socketTimeout: 45000,
-                });
-
                 const { html: htmlBody, attachments } = emailService.embedImages(replyBody);
                 const mailOptions = {
                   from: config.email,
@@ -138,7 +127,23 @@ async function checkAndRespond(userId) {
                   text: replyBody.replace(/<[^>]+>/g, ''),
                 };
                 if (attachments.length > 0) mailOptions.attachments = attachments;
-                const info = await transporter.sendMail(mailOptions);
+
+                if (sendgrid.isConfigured()) {
+                  await sendgrid.sendMail(mailOptions);
+                } else {
+                  const transporter = nodemailer.createTransport({
+                    host: config.smtpHost,
+                    port: config.smtpPort,
+                    secure: config.smtpSecure,
+                    auth: { user: config.email, pass: config.appPassword },
+                    tls: { rejectUnauthorized: false },
+                    family: 4,
+                    connectionTimeout: 30000,
+                    greetingTimeout: 30000,
+                    socketTimeout: 45000,
+                  });
+                  await transporter.sendMail(mailOptions);
+                }
 
                 const savedEmail = await prisma.emailMessage.findUnique({
                   where: { userId_messageId: { userId, messageId } },

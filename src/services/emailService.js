@@ -4,6 +4,7 @@ const nodemailer = require("nodemailer");
 const path = require("path");
 const fs = require("fs");
 const { PrismaClient } = require("@prisma/client");
+const sendgrid = require("./sendgridService");
 
 const prisma = new PrismaClient();
 
@@ -234,18 +235,6 @@ async function sendAutoReply(emailMessageId, autoReplyId) {
   if (!email || !reply || !config) throw new Error("Dados incompletos para enviar resposta.");
   if (!reply.category.repliesEnabled) throw new Error("Respostas automáticas desativadas para esta categoria.");
 
-  const transporter = nodemailer.createTransport({
-    host: config.smtpHost,
-    port: config.smtpPort,
-    secure: config.smtpSecure,
-    auth: { user: config.email, pass: config.appPassword },
-    tls: { rejectUnauthorized: false },
-    family: 4,
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 45000,
-  });
-
   const subject = reply.subject
     ? `Re: ${email.subject} - ${reply.subject}`
     : `Re: ${email.subject}`;
@@ -258,7 +247,7 @@ async function sendAutoReply(emailMessageId, autoReplyId) {
   const { html: htmlBody, attachments } = embedImages(body);
 
   const mailOptions = {
-    from: `"${config.email}" <${config.email}>`,
+    from: config.email,
     to: toAddress,
     subject,
     html: htmlBody,
@@ -266,8 +255,30 @@ async function sendAutoReply(emailMessageId, autoReplyId) {
   };
   if (attachments.length > 0) mailOptions.attachments = attachments;
 
-  const info = await transporter.sendMail(mailOptions);
-  console.log("E-mail enviado com sucesso, ID:", info.messageId);
+  if (sendgrid.isConfigured()) {
+    await sendgrid.sendMail(mailOptions);
+  } else {
+    const transporter = nodemailer.createTransport({
+      host: config.smtpHost,
+      port: config.smtpPort,
+      secure: config.smtpSecure,
+      auth: { user: config.email, pass: config.appPassword },
+      tls: { rejectUnauthorized: false },
+      family: 4,
+      connectionTimeout: 30000,
+      greetingTimeout: 30000,
+      socketTimeout: 45000,
+    });
+
+    await transporter.sendMail({
+      from: `"${config.email}" <${config.email}>`,
+      to: toAddress,
+      subject,
+      html: htmlBody,
+      text: body.replace(/<[^>]+>/g, ''),
+      attachments: attachments.length > 0 ? attachments : undefined,
+    });
+  }
 
   await prisma.sentReply.create({
     data: {

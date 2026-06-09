@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const emailService = require("../services/emailService");
+const sendgrid = require("../services/sendgridService");
 
 const prisma = new PrismaClient();
 
@@ -359,6 +360,16 @@ exports.testSmtp = async (req, res) => {
     const config = await prisma.emailConfig.findUnique({ where: { userId: req.user.id } });
     if (!config) return res.json({ error: "Sem configuração de e-mail." });
 
+    if (sendgrid.isConfigured()) {
+      await sendgrid.sendMail({
+        from: config.email,
+        to: config.email,
+        subject: "Teste de envio Email Express",
+        text: "Se você recebeu este e-mail, o SendGrid está funcionando corretamente!",
+      });
+      return res.json({ success: true, message: "E-mail de teste enviado via SendGrid!" });
+    }
+
     const nodemailer = require("nodemailer");
     const transporter = nodemailer.createTransport({
       host: config.smtpHost,
@@ -453,15 +464,6 @@ exports.postSendManualReply = async (req, res) => {
     const config = await prisma.emailConfig.findUnique({ where: { userId: req.user.id } });
     if (!config) return res.status(400).json({ error: "Configure seu e-mail primeiro." });
 
-    const nodemailer = require("nodemailer");
-    const transporter = nodemailer.createTransport({
-      host: config.smtpHost, port: config.smtpPort, secure: config.smtpSecure,
-      auth: { user: config.email, pass: config.appPassword },
-      tls: { rejectUnauthorized: false },
-      family: 4,
-      connectionTimeout: 30000, greetingTimeout: 30000, socketTimeout: 45000,
-    });
-
     const toAddress = email.from.replace(/.*<([^>]+)>/, "$1").trim() || email.from;
     const subject = `Re: ${email.subject}`;
     const fullBody = config.signature ? `${body}<br><br>${config.signature}` : body;
@@ -471,7 +473,20 @@ exports.postSendManualReply = async (req, res) => {
       from: config.email, to: toAddress, subject, html: htmlBody, text: fullBody.replace(/<[^>]+>/g, ''),
     };
     if (attachments.length > 0) mailOptions.attachments = attachments;
-    await transporter.sendMail(mailOptions);
+
+    if (sendgrid.isConfigured()) {
+      await sendgrid.sendMail(mailOptions);
+    } else {
+      const nodemailer = require("nodemailer");
+      const transporter = nodemailer.createTransport({
+        host: config.smtpHost, port: config.smtpPort, secure: config.smtpSecure,
+        auth: { user: config.email, pass: config.appPassword },
+        tls: { rejectUnauthorized: false },
+        family: 4,
+        connectionTimeout: 30000, greetingTimeout: 30000, socketTimeout: 45000,
+      });
+      await transporter.sendMail(mailOptions);
+    }
 
     await prisma.sentReply.create({
       data: { emailId, subject, body },

@@ -1174,10 +1174,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
+  padding: 14px 18px;
   background: var(--surface);
-  border-radius: var(--radius-sm);
-  margin-bottom: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 14px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .category-info {
@@ -1219,14 +1221,16 @@ body {
 
 .email-card {
   background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
-  transition: box-shadow var(--transition), opacity var(--transition);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  transition: box-shadow 0.2s ease, border-color 0.2s ease, opacity var(--transition);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
 }
 
 .email-card:hover {
-  box-shadow: var(--shadow-sm);
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.12);
 }
 
 .email-card.dragging {
@@ -1609,6 +1613,7 @@ body {
 
 .category-card:hover {
   box-shadow: var(--shadow);
+  border-color: var(--primary);
 }
 
 .category-card-header {
@@ -1819,9 +1824,16 @@ body {
 
 .reply-card {
   background: var(--surface);
-  border: 1px solid var(--border-light);
-  border-radius: var(--radius-sm);
-  padding: 14px 16px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px 18px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.reply-card:hover {
+  border-color: var(--primary);
+  box-shadow: 0 2px 12px rgba(79, 70, 229, 0.1);
 }
 
 .reply-card-header {

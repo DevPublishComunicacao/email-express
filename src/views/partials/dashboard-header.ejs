@@ -1,0 +1,33 @@
+<header class="dashboard-header">
+  <a href="/dashboard" class="dashboard-title" style="text-decoration:none;color:inherit">
+    <i class="fas fa-envelope"></i>
+    <h1>Email Express</h1>
+  </a>
+  <nav class="dashboard-nav">
+    <a href="/dashboard" class="nav-link" data-path="/dashboard"><i class="fas fa-home"></i> <span>Dashboard</span></a>
+    <a href="/email/inbox" class="nav-link" data-path="/email/inbox"><i class="fas fa-inbox"></i> <span>E-mails</span></a>
+    <a href="/email/categories" class="nav-link" data-path="/email/categories"><i class="fas fa-tags"></i> <span>Categorias</span></a>
+    <a href="/email/auto-replies" class="nav-link" data-path="/email/auto-replies"><i class="fas fa-reply-all"></i> <span>Auto-Respostas</span></a>
+    <a href="/email/sent-replies" class="nav-link" data-path="/email/sent-replies"><i class="fas fa-paper-plane"></i> <span>Enviadas</span></a>
+    <script>document.querySelectorAll('.nav-link[data-path]').forEach(function(link) { if (window.location.pathname.startsWith(link.dataset.path)) link.classList.add('active'); });</script>
+  </nav>
+  <div class="dashboard-user dropdown">
+    <button class="dropdown-toggle">
+      <div class="avatar-mini">
+        <% if (user.avatar) { %>
+          <img src="<%= user.avatar %>" alt="" />
+        <% } else { %>
+          <span><%= (user.name || user.email).charAt(0).toUpperCase() %></span>
+        <% } %>
+      </div>
+      <span><%= user.name || user.email %></span>
+      <i class="fas fa-chevron-down"></i>
+    </button>
+    <div class="dropdown-menu">
+      <a href="/email/config" class="dropdown-item"><i class="fas fa-cog"></i> Configurar E-mail</a>
+      <a href="/email/signature" class="dropdown-item"><i class="fas fa-pen"></i> Assinatura</a>
+      <div class="dropdown-divider"></div>
+      <a href="/auth/logout" class="dropdown-item dropdown-item--danger"><i class="fas fa-sign-out-alt"></i> Sair</a>
+    </div>
+  </div>
+</header>

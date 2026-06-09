@@ -1,0 +1,53 @@
+<%- include('partials/head') %>
+<main class="dashboard">
+<%- include('partials/dashboard-header') %>
+
+<section class="page-content">
+  <div class="page-header">
+    <h2><i class="fas fa-paper-plane"></i> Respostas Enviadas</h2>
+    <p>Histórico de todas as respostas enviadas.</p>
+  </div>
+
+  <div class="card">
+    <div class="card-body p-0">
+      <table class="dashboard-table">
+        <thead>
+          <tr>
+            <th style="width:130px">Data</th>
+            <th>De</th>
+            <th>Assunto</th>
+            <th style="width:60px">Tipo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% if (replies.length === 0) { %>
+            <tr><td colspan="4" class="empty-cell">Nenhuma resposta enviada ainda.</td></tr>
+          <% } else { %>
+            <% replies.forEach(function(r) { %>
+              <tr>
+                <td class="cell-date"><%= new Date(r.sentAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></td>
+                <td><%= r.email.from %></td>
+                <td><%= r.subject %></td>
+                <td><span class="badge badge-sent"><%= r.autoReply ? 'Auto' : 'Manual' %></span></td>
+              </tr>
+            <% }) %>
+          <% } %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <% if (totalPages > 1) { %>
+    <div class="pagination">
+      <% if (page > 1) { %>
+        <a href="/email/sent-replies?page=<%= page - 1 %>" class="btn btn-sm btn-outline"><i class="fas fa-chevron-left"></i> Anterior</a>
+      <% } %>
+      <span class="pagination-info">Página <%= page %> de <%= totalPages %> (<%= total %> respostas)</span>
+      <% if (page < totalPages) { %>
+        <a href="/email/sent-replies?page=<%= page + 1 %>" class="btn btn-sm btn-outline">Próximo <i class="fas fa-chevron-right"></i></a>
+      <% } %>
+    </div>
+  <% } %>
+</section>
+</main>
+<%- include('partials/footer') %>

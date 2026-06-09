@@ -1,0 +1,171 @@
+<%- include('partials/head') %>
+<main class="dashboard">
+<%- include('partials/dashboard-header') %>
+
+<section class="page-content">
+  <div class="page-header page-header--between">
+    <div>
+      <h2><i class="fas fa-tags"></i> Categorias</h2>
+      <p>Gerencie as categorias para classificação de e-mails.</p>
+    </div>
+    <button class="btn btn-primary" onclick="document.getElementById('newCategoryForm').style.display='block'">
+      <i class="fas fa-plus"></i> Nova Categoria
+    </button>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i><span><%= error %></span></div>
+  <% } %>
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-success"><i class="fas fa-check-circle"></i><span><%= success %></span></div>
+  <% } %>
+
+  <div class="card" id="newCategoryForm" style="display:none">
+    <div class="card-body">
+      <h3>Nova Categoria</h3>
+      <form action="/email/categories" method="POST" class="category-form">
+        <div class="form-group">
+          <label for="name">Nome da Categoria</label>
+          <input type="text" id="name" name="name" placeholder="Ex: Clientes, Urgente..." required />
+        </div>
+        <div class="form-group">
+          <label for="color">Cor</label>
+          <input type="color" id="color" name="color" value="#1877f2" />
+        </div>
+        <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Criar</button>
+        <button type="button" class="btn btn-outline" onclick="this.closest('.card').style.display='none'">Cancelar</button>
+      </form>
+    </div>
+  </div>
+
+  <div class="category-grid">
+    <% categories.forEach(function(cat) { %>
+      <div class="category-card" style="border-top: 4px solid <%= cat.color %>">
+        <div class="category-card-header">
+          <span class="cat-dot" style="background: <%= cat.color %>"></span>
+          <h3><%= cat.name %></h3>
+          <% if (cat.isSystem) { %>
+            <span class="badge badge-system">Sistema</span>
+          <% } %>
+        </div>
+        <div class="category-card-body">
+          <p><strong><%= cat.autoReplies ? cat.autoReplies.length : 0 %></strong> resposta(s) automática(s)</p>
+          <label class="toggle-label">
+            <span class="toggle-text">Respostas automáticas</span>
+            <input type="checkbox" class="toggle-replies-cat" data-category-id="<%= cat.id %>" <%= cat.repliesEnabled ? 'checked' : '' %> />
+            <span class="toggle-slider"></span>
+          </label>
+          <div class="category-card-actions">
+            <button class="btn btn-sm btn-outline edit-cat-btn"
+              data-id="<%= cat.id %>"
+              data-name="<%= cat.name %>"
+              data-color="<%= cat.color %>">
+              <i class="fas fa-edit"></i>
+            </button>
+            <% if (!cat.autoReplies || cat.autoReplies.length === 0) { %>
+              <button class="btn btn-sm btn-danger delete-cat-btn" data-id="<%= cat.id %>" data-name="<%= cat.name %>">
+                <i class="fas fa-trash"></i>
+              </button>
+            <% } %>
+          </div>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<div id="editCategoryModal" class="modal" style="display:none">
+  <div class="modal-content">
+    <span class="modal-close">&times;</span>
+    <h3>Editar Categoria</h3>
+    <form id="editCategoryForm">
+      <input type="hidden" id="edit-id" name="id" />
+      <div class="form-group">
+        <label for="edit-name">Nome</label>
+        <input type="text" id="edit-name" name="name" required />
+      </div>
+      <div class="form-group">
+        <label for="edit-color">Cor</label>
+        <input type="color" id="edit-color" name="color" />
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-save"></i> Salvar</button>
+    </form>
+  </div>
+</div>
+
+<script>
+(function() {
+  // Edit category
+  document.querySelectorAll('.edit-cat-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById('edit-id').value = this.dataset.id;
+      document.getElementById('edit-name').value = this.dataset.name;
+      document.getElementById('edit-color').value = this.dataset.color;
+      document.getElementById('editCategoryModal').style.display = 'flex';
+    });
+  });
+
+  document.querySelector('.modal-close').addEventListener('click', function() {
+    document.getElementById('editCategoryModal').style.display = 'none';
+  });
+
+  document.getElementById('editCategoryForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const id = document.getElementById('edit-id').value;
+    const name = document.getElementById('edit-name').value;
+    const color = document.getElementById('edit-color').value;
+
+    try {
+      const res = await fetch('/email/categories/' + id, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name, color })
+      });
+      const data = await res.json();
+      if (data.success) {
+        location.reload();
+      } else {
+        alert(data.error || 'Erro ao atualizar.');
+      }
+    } catch (err) {
+      alert('Erro de conexão.');
+    }
+  });
+
+  // Toggle replies
+  document.querySelectorAll('.toggle-replies-cat').forEach(function(cb) {
+    cb.addEventListener('change', async function() {
+      try {
+        await fetch('/email/categories/' + this.dataset.categoryId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repliesEnabled: this.checked })
+        });
+      } catch (e) {}
+    });
+  });
+
+  // Delete category
+  document.querySelectorAll('.delete-cat-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Excluir categoria "' + this.dataset.name + '"?')) return;
+      try {
+        const res = await fetch('/email/categories/' + this.dataset.id, {
+          method: 'DELETE'
+        });
+        const data = await res.json();
+        if (data.success) {
+          location.reload();
+        } else {
+          alert(data.error || 'Erro ao excluir.');
+        }
+      } catch (err) {
+        alert('Erro de conexão.');
+      }
+    });
+  });
+})();
+</script>
+
+</main>
+<%- include('partials/footer') %>

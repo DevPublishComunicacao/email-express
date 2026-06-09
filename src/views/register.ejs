@@ -1,0 +1,142 @@
+<%- include('partials/head') %>
+  <main class="auth-container auth-container--wide">
+    <div class="auth-card shadow-box">
+      <div class="auth-header">
+        <div class="logo">
+          <i class="fas fa-envelope"></i>
+        </div>
+        <h1>Cadastre-se <span class="required-mark">aqui</span></h1>
+        <p>Os campos com <span class="required-mark">*</span> são obrigatórios.</p>
+      </div>
+
+      <% if (typeof error !== 'undefined' && error) { %>
+        <div class="alert alert-error">
+          <i class="fas fa-exclamation-circle"></i>
+          <span><%= error %></span>
+        </div>
+      <% } %>
+
+      <form action="/auth/register" method="POST" class="auth-form" id="registerForm" novalidate>
+        <div class="form-grid">
+          <div class="input-group grid-full">
+            <label for="name">
+              <i class="fas fa-user"></i>
+              <span>Nome <span class="required-mark">*</span></span>
+            </label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              placeholder="Seu nome completo"
+              value="<%= typeof name !== 'undefined' ? name : '' %>"
+              required
+            />
+            <span class="field-error" id="name-error"></span>
+          </div>
+
+          <div class="input-group">
+            <label for="email">
+              <i class="fas fa-envelope"></i>
+              <span>E-mail <span class="required-mark">*</span></span>
+            </label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="seu@email.com"
+              value="<%= typeof email !== 'undefined' ? email : '' %>"
+              required
+            />
+            <span class="field-error" id="email-error"></span>
+          </div>
+
+          <div class="input-group">
+            <label for="phone">
+              <i class="fas fa-phone"></i>
+              <span>Celular <span class="required-mark">*</span></span>
+            </label>
+            <input
+              type="tel"
+              id="phone"
+              name="phone"
+              placeholder="(XX) XXXXX-XXXX"
+              maxlength="16"
+              value="<%= typeof phone !== 'undefined' ? phone : '' %>"
+              required
+            />
+            <span class="field-error" id="phone-error"></span>
+          </div>
+
+          <div class="input-group">
+            <label for="password">
+              <i class="fas fa-lock"></i>
+              <span>Senha <span class="required-mark">*</span></span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="password"
+                name="password"
+                placeholder="Crie uma senha (mín. 6 caracteres)"
+                required
+                minlength="6"
+              />
+              <button type="button" class="toggle-password" aria-label="Mostrar senha">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="field-error" id="password-error"></span>
+          </div>
+
+          <div class="input-group">
+            <label for="confirmPassword">
+              <i class="fas fa-lock"></i>
+              <span>Confirmar Senha <span class="required-mark">*</span></span>
+            </label>
+            <div class="password-wrapper">
+              <input
+                type="password"
+                id="confirmPassword"
+                name="confirmPassword"
+                placeholder="Repita a senha"
+                required
+                minlength="6"
+              />
+              <button type="button" class="toggle-password" aria-label="Mostrar senha">
+                <i class="fas fa-eye"></i>
+              </button>
+            </div>
+            <span class="field-error" id="confirmPassword-error"></span>
+          </div>
+
+          <div class="input-group grid-full">
+            <label for="captcha">
+              <i class="fas fa-shield-halved"></i>
+              <span>Quanto é <%= captchaA %> + <%= captchaB %>? <span class="required-mark">*</span></span>
+            </label>
+            <input
+              type="number"
+              id="captcha"
+              name="captcha"
+              placeholder="Digite o resultado"
+              required
+            />
+            <input type="hidden" name="captchaToken" value="<%= captchaToken %>" />
+            <span class="field-error" id="captcha-error"></span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+          <span>Cadastrar</span>
+          <i class="fas fa-user-plus"></i>
+        </button>
+      </form>
+
+      <p class="auth-footer">
+        Já tem uma conta?
+        <a href="/auth/login">Faça login!</a>
+      </p>
+    </div>
+  </main>
+  <script src="/js/register.js"></script>
+  <%- include('partials/footer') %>

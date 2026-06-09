@@ -1,0 +1,111 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String?
+  email     String   @unique
+  phone     String?
+  password  String?
+  googleId  String?  @unique
+  avatar    String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  emailConfig EmailConfig?
+  emailMessages EmailMessage[]
+  categories    Category[]
+  autoReplies   AutoReply[]
+
+  @@map("users")
+}
+
+model EmailConfig {
+  id         String   @id @default(uuid())
+  userId     String   @unique
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  imapHost   String   @default("imap.gmail.com")
+  imapPort   Int      @default(993)
+  imapSecure Boolean  @default(true)
+  smtpHost   String   @default("smtp.gmail.com")
+  smtpPort   Int      @default(587)
+  smtpSecure Boolean  @default(false)
+  email      String
+  appPassword String
+  signature  String? @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("email_configs")
+}
+
+model EmailMessage {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messageId String
+  from      String
+  to        String
+  subject   String
+  textBody  String   @db.Text
+  htmlBody  String?  @db.Text
+  category  String   @default("inbox")
+  receivedAt DateTime
+  createdAt DateTime @default(now()) @map("created_at")
+  sentReplies SentReply[]
+
+  @@unique([userId, messageId])
+  @@map("email_messages")
+}
+
+model SentReply {
+  id         String    @id @default(uuid())
+  emailId    String
+  email      EmailMessage @relation(fields: [emailId], references: [id], onDelete: Cascade)
+  autoReplyId String?
+  autoReply  AutoReply? @relation(fields: [autoReplyId], references: [id], onDelete: SetNull)
+  subject    String
+  body       String   @db.Text
+  sentAt     DateTime @default(now()) @map("sent_at")
+
+  @@map("sent_replies")
+}
+
+model Category {
+  id              String   @id @default(uuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name            String
+  color           String   @default("#1877f2")
+  isSystem        Boolean  @default(false)
+  repliesEnabled  Boolean  @default(true)
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  autoReplies AutoReply[]
+
+  @@unique([userId, name])
+  @@map("categories")
+}
+
+model AutoReply {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  subject    String   @default("")
+  body       String   @db.Text
+  useSignature Boolean @default(true)
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  sentReplies SentReply[]
+
+  @@map("auto_replies")
+}

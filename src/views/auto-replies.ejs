@@ -1,0 +1,330 @@
+<%- include('partials/head') %>
+<main class="dashboard">
+<%- include('partials/dashboard-header') %>
+
+<section class="page-content">
+  <div class="page-header">
+    <h2><i class="fas fa-reply-all"></i> Auto-Respostas</h2>
+    <p>Configure respostas automáticas para cada categoria de e-mail.</p>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i><span><%= error %></span></div>
+  <% } %>
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-success"><i class="fas fa-check-circle"></i><span><%= success %></span></div>
+  <% } %>
+
+  <!-- Edit Form (hidden by default) -->
+  <div class="card" id="editReplyForm" style="display:none">
+    <div class="card-body">
+      <div id="editIndicator" class="edit-indicator">
+        <i class="fas fa-pencil-alt"></i> <span id="editTitle">Editando resposta</span>
+        <button type="button" class="btn btn-sm btn-link" id="cancelEditBtn">Cancelar</button>
+      </div>
+      <form action="/email/auto-replies" method="POST" class="auto-reply-form">
+        <input type="hidden" name="_id" id="edit-id" value="" />
+        <div class="form-group">
+          <label for="editCategoryId">Categoria</label>
+          <select id="editCategoryId" name="categoryId" required></select>
+        </div>
+        <div class="form-group">
+          <label for="editSubject">Assunto (opcional)</label>
+          <input type="text" id="editSubject" name="subject" placeholder="Deixe em branco para usar o assunto original" />
+        </div>
+        <div class="form-group">
+          <label for="body">Corpo da Resposta <span class="required-mark">*</span></label>
+          <div class="editor-toolbar">
+            <button type="button" class="editor-btn editor-btn-mode active" data-mode="visual" title="Visual"><i class="fas fa-eye"></i></button>
+            <button type="button" class="editor-btn editor-btn-mode" data-mode="html" title="HTML"><i class="fas fa-code"></i></button>
+            <span class="editor-sep">|</span>
+            <button type="button" class="editor-btn" data-cmd="bold" title="Negrito"><i class="fas fa-bold"></i></button>
+            <button type="button" class="editor-btn" data-cmd="italic" title="Itálico"><i class="fas fa-italic"></i></button>
+            <button type="button" class="editor-btn" data-cmd="underline" title="Sublinhado"><i class="fas fa-underline"></i></button>
+            <span class="editor-sep">|</span>
+            <button type="button" class="editor-btn" data-cmd="insertUnorderedList" title="Lista"><i class="fas fa-list-ul"></i></button>
+            <button type="button" class="editor-btn" data-cmd="insertOrderedList" title="Lista numerada"><i class="fas fa-list-ol"></i></button>
+            <span class="editor-sep">|</span>
+            <button type="button" class="editor-btn editor-btn-image" title="Inserir imagem" data-editor-id="body"><i class="fas fa-image"></i></button>
+          </div>
+          <div class="auto-reply-editor" id="body" contenteditable="true" data-placeholder="Digite o texto da resposta automática. Use {from} para o nome do remetente e {subject} para o assunto." data-signature="<%- typeof signature !== 'undefined' ? signature.replace(/"/g, '&quot;') : '' %>" data-original-content="<%- (typeof signature !== 'undefined' && signature ? signature : '').replace(/"/g, '&quot;') %>"><%- typeof signature !== 'undefined' && signature ? signature : '' %></div>
+          <textarea class="auto-reply-editor-html" id="body-html" style="display:none" rows="10" placeholder="Digite o HTML da resposta automática..."></textarea>
+          <input type="hidden" name="body" id="body-hidden" />
+          <small class="form-hint">Você pode usar <code>{from}</code> e <code>{subject}</code> como variáveis.</small>
+        </div>
+        <div class="form-group">
+          <label class="toggle-label">
+            <span class="toggle-text">Incluir assinatura</span>
+            <input type="checkbox" name="useSignature" id="useSignatureCb" checked />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button type="submit" class="btn btn-primary" id="submitReplyBtn"><i class="fas fa-save"></i> Salvar Resposta</button>
+          <button type="button" class="btn btn-secondary" id="cancelFormBtn">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category list -->
+  <div class="category-sections">
+    <% categories.forEach(function(cat) { %>
+      <div class="category-section">
+        <div class="category-header" style="border-left: 4px solid <%= cat.color %>">
+          <div class="category-info">
+            <span class="cat-dot" style="background:<%= cat.color %>"></span>
+            <h3><%= cat.name %></h3>
+            <span class="cat-badge" style="background:<%= cat.color %>"><%= cat.autoReplies.length %></span>
+          </div>
+        </div>
+
+        <% if (cat.autoReplies.length > 0) { %>
+          <% cat.autoReplies.forEach(function(reply) { %>
+            <div class="reply-card" id="reply-<%= reply.id %>">
+              <div class="reply-card-header">
+                <div>
+                  <strong><%= reply.subject || '(Sem assunto - usa o original)' %></strong>
+                  <span class="badge <%= reply.useSignature !== false ? 'badge-signature-on' : 'badge-signature-off' %>">
+                    <i class="fas fa-<%= reply.useSignature !== false ? 'check-circle' : 'times-circle' %>"></i>
+                    Assinatura <%= reply.useSignature !== false ? 'ativada' : 'desativada' %>
+                  </span>
+                </div>
+                <div class="reply-actions">
+                  <button class="btn btn-sm btn-secondary edit-reply-btn" data-id="<%= reply.id %>" data-category="<%= cat.id %>" data-catname="<%= cat.name %>" data-subject="<%= reply.subject %>" data-usesignature="<%= reply.useSignature !== false ? 'true' : 'false' %>">
+                    <i class="fas fa-edit"></i>
+                  </button>
+                  <button class="btn btn-sm btn-danger delete-reply-btn" data-id="<%= reply.id %>">
+                    <i class="fas fa-trash"></i>
+                  </button>
+                </div>
+              </div>
+              <div class="reply-card-body">
+                <div class="reply-body-content"><%- reply.body %></div>
+              </div>
+            </div>
+          <% }) %>
+        <% } else { %>
+          <div class="reply-card reply-card-empty">
+            <div class="reply-card-header">
+              <span class="empty-state" style="padding:0;font-size:13px">Nenhuma resposta automática configurada.</span>
+              <button class="btn btn-sm btn-primary create-reply-btn" data-category="<%= cat.id %>" data-catname="<%= cat.name %>">
+                <i class="fas fa-plus"></i> Criar Resposta
+              </button>
+            </div>
+          </div>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<script>
+(function() {
+  var imageInput = document.createElement('input');
+  imageInput.type = 'file';
+  imageInput.accept = 'image/*';
+  imageInput.style.display = 'none';
+  document.body.appendChild(imageInput);
+  var targetEditorId = null;
+
+  var editForm = document.getElementById('editReplyForm');
+  var cancelFormBtn = document.getElementById('cancelFormBtn');
+  var cancelEditBtn = document.getElementById('cancelEditBtn');
+
+  function hideForm() {
+    editForm.style.display = 'none';
+    document.getElementById('edit-id').value = '';
+    document.getElementById('editSubject').value = '';
+    var originalContent = document.getElementById('body').dataset.originalContent || '';
+    document.getElementById('body').innerHTML = originalContent;
+    document.getElementById('useSignatureCb').checked = true;
+    document.getElementById('submitReplyBtn').innerHTML = '<i class="fas fa-save"></i> Salvar Resposta';
+    document.getElementById('editIndicator').querySelector('#editTitle').textContent = 'Editando resposta';
+  }
+
+  function showForm(catId, catName, replyId, subject, bodyHtml, useSignature) {
+    // Populate category select
+    var sel = document.getElementById('editCategoryId');
+    sel.innerHTML = '';
+    <% categories.forEach(function(cat) { %>
+      (function() {
+        var opt = document.createElement('option');
+        opt.value = '<%= cat.id %>';
+        opt.textContent = '<%= cat.name %>';
+        if ('<%= cat.id %>' === catId) opt.selected = true;
+        sel.appendChild(opt);
+      })();
+    <% }) %>
+
+    document.getElementById('editSubject').value = subject || '';
+    document.getElementById('body').innerHTML = bodyHtml;
+    document.getElementById('useSignatureCb').checked = useSignature !== false;
+    document.getElementById('edit-id').value = replyId || '';
+    document.getElementById('submitReplyBtn').innerHTML = replyId ? '<i class="fas fa-save"></i> Atualizar Resposta' : '<i class="fas fa-save"></i> Salvar Resposta';
+    document.getElementById('editIndicator').querySelector('#editTitle').textContent = replyId ? 'Editando resposta - ' + catName : 'Nova resposta - ' + catName;
+    editForm.style.display = '';
+    editForm.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Create reply buttons
+  document.querySelectorAll('.create-reply-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var catId = this.dataset.category;
+      var catName = this.dataset.catname;
+      showForm(catId, catName, '', '', '', true);
+    });
+  });
+
+  // Edit reply buttons
+  document.querySelectorAll('.edit-reply-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var id = this.dataset.id;
+      var catId = this.dataset.category;
+      var catName = this.dataset.catname;
+      var subject = this.dataset.subject;
+      var useSignature = this.dataset.usesignature === 'true';
+      var replyCard = document.getElementById('reply-' + id);
+      var bodyHtml = replyCard ? replyCard.querySelector('.reply-body-content').innerHTML : '';
+      showForm(catId, catName, id, subject, bodyHtml, useSignature);
+    });
+  });
+
+  // Cancel buttons
+  if (cancelFormBtn) cancelFormBtn.addEventListener('click', hideForm);
+  if (cancelEditBtn) cancelEditBtn.addEventListener('click', hideForm);
+
+  // Editor toolbar
+  document.querySelectorAll('.editor-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (this.classList.contains('editor-btn-image')) {
+        targetEditorId = this.dataset.editorId;
+        imageInput.click();
+        return;
+      }
+      if (this.classList.contains('editor-btn-mode')) return;
+      var editorTextarea = document.getElementById('body-html');
+      if (editorTextarea && editorTextarea.style.display !== 'none') return;
+      var cmd = this.dataset.cmd;
+      document.execCommand(cmd, false, null);
+      var editor = document.getElementById('body');
+      if (editor) editor.focus();
+    });
+  });
+
+  imageInput.addEventListener('change', async function() {
+    if (!this.files || !this.files[0]) return;
+    var formData = new FormData();
+    formData.append('image', this.files[0]);
+    try {
+      var res = await fetch('/email/upload-image', { method: 'POST', body: formData });
+      var data = await res.json();
+      if (data.url) {
+        var editorDiv = document.getElementById(targetEditorId);
+        var editorTextarea = document.getElementById(targetEditorId + '-html');
+        var isHtmlMode = editorTextarea && editorTextarea.style.display !== 'none';
+        if (isHtmlMode && editorTextarea) {
+          var imgHtml = '<div style="display:inline-block;resize:both;overflow:hidden;max-width:100%"><img src="' + data.url + '" style="max-width:100%;height:auto"></div>';
+          var start = editorTextarea.selectionStart;
+          var end = editorTextarea.selectionEnd;
+          var text = editorTextarea.value;
+          editorTextarea.value = text.slice(0, start) + imgHtml + text.slice(end);
+          editorTextarea.focus();
+          editorTextarea.selectionStart = editorTextarea.selectionEnd = start + imgHtml.length;
+        } else if (editorDiv) {
+          editorDiv.focus();
+          document.execCommand('insertImage', false, data.url);
+          var img = editorDiv.querySelector('img:last-child');
+          if (img) {
+            img.style.maxWidth = '100%';
+            img.style.height = 'auto';
+            var wrapper = document.createElement('div');
+            wrapper.style.display = 'inline-block';
+            wrapper.style.resize = 'both';
+            wrapper.style.overflow = 'hidden';
+            wrapper.style.maxWidth = '100%';
+            img.parentNode.insertBefore(wrapper, img);
+            wrapper.appendChild(img);
+          }
+        }
+      } else {
+        alert(data.error || 'Erro ao enviar imagem.');
+      }
+    } catch (e) {
+      alert('Erro de conexão.');
+    }
+    this.value = '';
+    targetEditorId = null;
+  });
+
+  // Editor mode toggle
+  (function() {
+    var btnVisual = document.querySelector('.editor-btn-mode[data-mode="visual"]');
+    var btnHtml = document.querySelector('.editor-btn-mode[data-mode="html"]');
+    var editorDiv = document.getElementById('body');
+    var editorTextarea = document.getElementById('body-html');
+    if (btnVisual && btnHtml && editorDiv && editorTextarea) {
+      btnVisual.addEventListener('click', function() {
+        editorTextarea.value = editorDiv.innerHTML;
+        editorDiv.style.display = '';
+        editorTextarea.style.display = 'none';
+        btnVisual.classList.add('active');
+        btnHtml.classList.remove('active');
+      });
+      btnHtml.addEventListener('click', function() {
+        editorTextarea.value = editorDiv.innerHTML;
+        editorDiv.style.display = 'none';
+        editorTextarea.style.display = '';
+        btnVisual.classList.remove('active');
+        btnHtml.classList.add('active');
+      });
+    }
+  })();
+
+  // Signature toggle
+  var signatureCb = document.getElementById('useSignatureCb');
+  var autoBodyEditor = document.getElementById('body');
+  var signatureHtml = autoBodyEditor ? autoBodyEditor.dataset.signature || '' : '';
+  var ta = document.createElement('textarea');
+  ta.innerHTML = signatureHtml;
+  signatureHtml = ta.value;
+
+  if (signatureCb && autoBodyEditor && signatureHtml) {
+    signatureCb.addEventListener('change', function() {
+      if (this.checked) {
+        if (autoBodyEditor.innerHTML.indexOf(signatureHtml) === -1) {
+          autoBodyEditor.innerHTML += '<br><br>' + signatureHtml;
+        }
+      } else {
+        autoBodyEditor.innerHTML = autoBodyEditor.innerHTML.replace(signatureHtml, '');
+      }
+    });
+  }
+
+  // Copy editor content to hidden input on submit
+  var replyForm = document.querySelector('.auto-reply-form');
+  if (replyForm) {
+    replyForm.addEventListener('submit', function() {
+      var hiddenInput = document.getElementById('body-hidden');
+      var editorDiv = document.getElementById('body');
+      var editorTextarea = document.getElementById('body-html');
+      var isHtmlMode = editorTextarea.style.display !== 'none';
+      hiddenInput.value = isHtmlMode ? editorTextarea.value : editorDiv.innerHTML;
+    });
+  }
+
+  document.querySelectorAll('.delete-reply-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      if (!confirm('Excluir esta resposta automática?')) return;
+      try {
+        const res = await fetch('/email/auto-replies/' + this.dataset.id, { method: 'DELETE' });
+        const data = await res.json();
+        if (data.success) { location.reload(); }
+        else { alert(data.error || 'Erro ao excluir.'); }
+      } catch (err) { alert('Erro de conexão.'); }
+    });
+  });
+})();
+</script>
+</main>
+<%- include('partials/footer') %>

@@ -1,0 +1,482 @@
+<%- include('partials/head') %>
+<main class="dashboard">
+<%- include('partials/dashboard-header') %>
+
+<div id="loadingOverlay" class="loading-overlay" style="display:none">
+  <div class="loading-spinner">
+    <i class="fas fa-envelope fa-3x"></i>
+    <span id="loadingText">Carregando...</span>
+  </div>
+</div>
+
+<section class="page-content">
+  <div class="page-header page-header--between">
+    <div>
+      <h2><i class="fas fa-inbox"></i> Meus E-mails</h2>
+      <p>Total: <strong><%= total %></strong> e-mails classificados</p>
+    </div>
+    <form action="/email/inbox/fetch" method="POST" style="display:inline">
+      <button type="submit" class="btn btn-primary">
+        <i class="fas fa-sync-alt"></i> Buscar E-mails
+      </button>
+    </form>
+  </div>
+
+  <% if (typeof error !== 'undefined' && error) { %>
+    <div class="alert alert-error"><i class="fas fa-exclamation-circle"></i><span><%= error %></span></div>
+  <% } %>
+  <% if (typeof success !== 'undefined' && success) { %>
+    <div class="alert alert-success"><i class="fas fa-check-circle"></i><span><%= success %></span></div>
+  <% } %>
+
+  <div class="category-tabs">
+    <% categories.forEach(function(cat) { %>
+      <button class="category-tab" data-category="<%= cat.name.replace(/\s+/g, '-') %>" data-category-name="<%= cat.name %>" style="--cat-color: <%= cat.color %>">
+        <span class="cat-dot" style="background: <%= cat.color %>"></span>
+        <%= cat.name %>
+        <span class="cat-count"><%= cat.count %></span>
+      </button>
+    <% }) %>
+  </div>
+
+  <div class="category-sections">
+    <% categories.forEach(function(cat) { %>
+      <div class="category-section" id="section-<%= cat.name.replace(/\s+/g, '-') %>">
+        <div class="category-header" style="border-left: 4px solid <%= cat.color %>">
+          <div class="category-info">
+            <h3><%= cat.name %></h3>
+            <span class="cat-badge" style="background: <%= cat.color %>"><%= cat.count %> e-mails</span>
+          </div>
+          <div class="category-actions">
+            <label class="toggle-label" title="Ativar/desativar respostas automáticas">
+              <span class="toggle-text"><%= cat.autoReplies ? cat.autoReplies.length : 0 %> resposta(s)</span>
+              <input type="checkbox" class="toggle-replies" data-category-id="<%= cat.id %>" <%= cat.repliesEnabled ? 'checked' : '' %> />
+              <span class="toggle-slider"></span>
+            </label>
+            <a href="/email/auto-replies?category=<%= cat.name %>" class="btn btn-sm btn-outline">
+              <i class="fas fa-plus"></i>
+            </a>
+          </div>
+        </div>
+
+        <% if (cat.emails.length > 0) { %>
+          <div class="email-list" data-category="<%= cat.name %>">
+            <% cat.emails.forEach(function(email) { %>
+              <div class="email-card" draggable="true" data-email-id="<%= email.id %>">
+                <div class="email-card-header">
+                  <span class="email-from"><i class="fas fa-user"></i> <%= email.from %></span>
+                  <span class="email-date"><%= new Date(email.receivedAt).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) %></span>
+                </div>
+                <div class="email-subject"><%= email.subject %></div>
+                <div class="email-preview"><%= (email.textBody || '').substring(0, 200) %></div>
+                <div class="email-card-footer">
+                  <button class="btn btn-sm btn-outline toggle-email-body" data-target="body-<%= email.id %>">
+                    <i class="fas fa-eye"></i> Ler mais
+                  </button>
+                  <button class="btn btn-sm btn-outline btn-reply-manual" data-email-id="<%= email.id %>" data-email-from="<%= email.from %>" data-email-subject="<%= email.subject %>">
+                    <i class="fas fa-reply"></i> Responder
+                  </button>
+                  <% if (cat.autoReplies && cat.autoReplies.length > 0 && cat.repliesEnabled) { %>
+                    <div class="reply-actions">
+                      <select class="reply-select" data-email-id="<%= email.id %>">
+                        <option value="">Auto-resposta...</option>
+                        <% cat.autoReplies.forEach(function(r) { %>
+                          <option value="<%= r.id %>"><%= r.subject || 'Resposta padrão' %></option>
+                        <% }) %>
+                      </select>
+                      <button class="btn btn-sm btn-primary send-reply-btn" data-email-id="<%= email.id %>">
+                        <i class="fas fa-reply"></i> Enviar
+                      </button>
+                    </div>
+                  <% } %>
+                </div>
+                <div class="email-body" id="body-<%= email.id %>" style="display:none">
+                  <pre><%= (email.textBody || '').substring(0, 5000) %></pre>
+                </div>
+                <div class="manual-reply" id="manual-reply-<%= email.id %>" style="display:none">
+                  <div class="manual-reply-header">
+                    <strong>Responder para:</strong> <%= email.from %>
+                  </div>
+                  <div class="editor-toolbar">
+                    <button type="button" class="editor-btn" data-cmd="bold" title="Negrito"><i class="fas fa-bold"></i></button>
+                    <button type="button" class="editor-btn" data-cmd="italic" title="Itálico"><i class="fas fa-italic"></i></button>
+                    <button type="button" class="editor-btn" data-cmd="underline" title="Sublinhado"><i class="fas fa-underline"></i></button>
+                    <span class="editor-sep">|</span>
+                    <button type="button" class="editor-btn" data-cmd="insertUnorderedList" title="Lista"><i class="fas fa-list-ul"></i></button>
+                    <button type="button" class="editor-btn" data-cmd="insertOrderedList" title="Lista numerada"><i class="fas fa-list-ol"></i></button>
+                    <span class="editor-sep">|</span>
+                    <button type="button" class="editor-btn editor-btn-image" title="Inserir imagem" data-editor-id="editor-<%= email.id %>"><i class="fas fa-image"></i></button>
+                  </div>
+                  <div class="manual-reply-editor" id="editor-<%= email.id %>" contenteditable="true" data-placeholder="Digite sua resposta manual..."></div>
+                  <div class="manual-reply-actions">
+                    <button class="btn btn-sm btn-outline cancel-manual-reply" data-target="manual-reply-<%= email.id %>">Cancelar</button>
+                    <button class="btn btn-sm btn-primary send-manual-reply" data-email-id="<%= email.id %>">
+                      <i class="fas fa-paper-plane"></i> Enviar Resposta
+                    </button>
+                  </div>
+                </div>
+                <% if (email.sentReplies && email.sentReplies.length > 0) { %>
+                  <div class="sent-replies">
+                    <button class="btn btn-sm btn-outline toggle-replies-btn" data-target="replies-<%= email.id %>">
+                      <i class="fas fa-reply-all"></i> <%= email.sentReplies.length %> resposta(s) enviada(s)
+                    </button>
+                    <div class="sent-replies-list" id="replies-<%= email.id %>" style="display:none">
+                      <% email.sentReplies.forEach(function(reply) { %>
+                        <div class="sent-reply-item">
+                          <div class="sent-reply-header">
+                            <strong><i class="fas fa-reply"></i> <%= reply.subject %></strong>
+                            <span class="reply-date"><%= new Date(reply.sentAt).toLocaleString('pt-BR') %></span>
+                          </div>
+                          <div class="sent-reply-body"><%- reply.body %></div>
+                        </div>
+                      <% }) %>
+                    </div>
+                  </div>
+                <% } %>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <div class="email-list" data-category="<%= cat.name %>">
+            <p class="empty-state drop-hint">Arraste e-mails para esta categoria</p>
+          </div>
+        <% } %>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<script>
+(function() {
+  function showLoading(msg) {
+    var overlay = document.getElementById('loadingOverlay');
+    var text = document.getElementById('loadingText');
+    if (overlay && text) {
+      text.textContent = msg || 'Carregando...';
+      overlay.style.display = 'flex';
+    }
+  }
+
+  function hideLoading() {
+    var overlay = document.getElementById('loadingOverlay');
+    if (overlay) overlay.style.display = 'none';
+  }
+
+  // Fetch emails button
+  document.querySelector('form[action="/email/inbox/fetch"]')?.addEventListener('submit', function() {
+    showLoading('Buscando e-mails...');
+  });
+
+  // Category tabs
+  var tabs = document.querySelectorAll('.category-tab');
+  var sections = document.querySelectorAll('.category-section');
+
+  function activateTab(target) {
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    sections.forEach(function(s) {
+      s.style.display = s.id === 'section-' + target ? 'block' : 'none';
+    });
+    var activeTab = document.querySelector('.category-tab[data-category="' + target + '"]');
+    if (activeTab) activeTab.classList.add('active');
+  }
+
+  tabs.forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      var target = this.dataset.category;
+      sessionStorage.setItem('activeCategory', target);
+      activateTab(target);
+    });
+  });
+
+  var savedCategory = sessionStorage.getItem('activeCategory');
+  if (savedCategory) {
+    activateTab(savedCategory);
+  } else if (tabs.length > 0) {
+    tabs[0].click();
+  }
+
+  // Toggle email body
+  document.querySelectorAll('.toggle-email-body').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const target = document.getElementById(this.dataset.target);
+      if (target) {
+        target.style.display = target.style.display === 'none' ? 'block' : 'none';
+        this.querySelector('i').classList.toggle('fa-eye');
+        this.querySelector('i').classList.toggle('fa-eye-slash');
+      }
+    });
+  });
+
+  // Toggle sent replies list
+  document.querySelectorAll('.toggle-replies-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      const target = document.getElementById(this.dataset.target);
+      if (target) {
+        target.style.display = target.style.display === 'none' ? 'block' : 'none';
+        this.querySelector('i').classList.toggle('fa-reply-all');
+        this.querySelector('i').classList.toggle('fa-reply');
+      }
+    });
+  });
+
+  // Image upload input (shared)
+  var imageInput = document.createElement('input');
+  imageInput.type = 'file';
+  imageInput.accept = 'image/*';
+  imageInput.style.display = 'none';
+  document.body.appendChild(imageInput);
+
+  var targetEditorId = null;
+
+  // Editor toolbar buttons
+  document.querySelectorAll('.editor-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (this.classList.contains('editor-btn-image')) {
+        targetEditorId = this.dataset.editorId;
+        imageInput.click();
+        return;
+      }
+      var cmd = this.dataset.cmd;
+      document.execCommand(cmd, false, null);
+      var editor = this.closest('.manual-reply')?.querySelector('.manual-reply-editor') || document.getElementById('signatureEditor');
+      if (editor) editor.focus();
+    });
+  });
+
+  imageInput.addEventListener('change', async function() {
+    if (!this.files || !this.files[0]) return;
+    var formData = new FormData();
+    formData.append('image', this.files[0]);
+    try {
+      var res = await fetch('/email/upload-image', { method: 'POST', body: formData });
+      var data = await res.json();
+      if (data.url) {
+        var editor = document.getElementById(targetEditorId);
+        if (editor) {
+          editor.focus();
+          document.execCommand('insertImage', false, data.url);
+          var sel = window.getSelection();
+          if (sel.rangeCount) {
+            var range = sel.getRangeAt(0);
+            var img = range.startContainer?.parentElement?.closest('img') || editor.querySelector('img:last-child');
+            if (img) {
+              img.style.maxWidth = '100%';
+              img.style.height = 'auto';
+              var wrapper = document.createElement('div');
+              wrapper.style.display = 'inline-block';
+              wrapper.style.resize = 'both';
+              wrapper.style.overflow = 'hidden';
+              wrapper.style.maxWidth = '100%';
+              img.parentNode.insertBefore(wrapper, img);
+              wrapper.appendChild(img);
+            }
+          }
+        }
+      } else {
+        alert(data.error || 'Erro ao enviar imagem.');
+      }
+    } catch (e) {
+      alert('Erro de conexão.');
+    }
+    this.value = '';
+    targetEditorId = null;
+  });
+
+  // Manual reply toggle
+  document.querySelectorAll('.btn-reply-manual').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var emailId = this.dataset.emailId;
+      var target = document.getElementById('manual-reply-' + emailId);
+      if (target) {
+        var isVisible = target.style.display !== 'none';
+        document.querySelectorAll('.manual-reply').forEach(function(r) { r.style.display = 'none'; });
+        target.style.display = isVisible ? 'none' : 'block';
+        if (!isVisible) {
+          var editor = target.querySelector('.manual-reply-editor');
+          if (editor) { editor.focus(); editor.innerHTML = ''; }
+        }
+      }
+    });
+  });
+
+  // Cancel manual reply
+  document.querySelectorAll('.cancel-manual-reply').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.getElementById(this.dataset.target).style.display = 'none';
+    });
+  });
+
+  // Send manual reply
+  document.querySelectorAll('.send-manual-reply').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      var emailId = this.dataset.emailId;
+      var editor = document.getElementById('editor-' + emailId);
+      var body = editor ? editor.innerHTML.trim() : '';
+      body = body.replace(/<br>$/gi, '').replace(/<div><br><\/div>$/gi, '').trim();
+      if (!body || body === '<br>') { alert('Digite uma mensagem para responder.'); return; }
+      if (!confirm('Enviar resposta manual?')) return;
+
+      showLoading('Enviando resposta...');
+      try {
+        var controller = new AbortController();
+        var timeout = setTimeout(function() { controller.abort(); }, 20000);
+        var res = await fetch('/email/send-manual-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailId, body }),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        hideLoading();
+        var data = await res.json();
+        if (data.success) { location.reload(); }
+        else { alert('Erro: ' + (data.error || 'Falha ao enviar.')); }
+      } catch (err) {
+        hideLoading();
+        if (err.name === 'AbortError') { alert('Tempo limite excedido.'); }
+        else { alert('Erro de conexão.'); }
+      }
+    });
+  });
+
+  // Send auto reply
+  document.querySelectorAll('.send-reply-btn').forEach(function(btn) {
+    btn.addEventListener('click', async function() {
+      const emailId = this.dataset.emailId;
+      const select = document.querySelector('.reply-select[data-email-id="' + emailId + '"]');
+      if (!select || !select.value) {
+        alert('Selecione uma resposta automática.');
+        return;
+      }
+      if (!confirm('Enviar esta resposta automática?')) return;
+
+      showLoading('Enviando resposta...');
+      try {
+        const controller = new AbortController();
+        const timeout = setTimeout(function() { controller.abort(); }, 20000);
+        const res = await fetch('/email/send-reply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ emailId, replyId: select.value }),
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        hideLoading();
+        const data = await res.json();
+        if (data.success) {
+          location.reload();
+        } else {
+          alert('Erro: ' + (data.error || 'Falha ao enviar resposta.'));
+        }
+      } catch (err) {
+        hideLoading();
+        if (err.name === 'AbortError') {
+          alert('Tempo limite excedido ao enviar resposta. Verifique sua configuração SMTP.');
+        } else {
+          alert('Erro de conexão ao enviar resposta.');
+        }
+      }
+    });
+  });
+
+  // Toggle auto-replies
+  document.querySelectorAll('.toggle-replies').forEach(function(cb) {
+    cb.addEventListener('change', async function() {
+      var enabled = this.checked;
+      var categoryId = this.dataset.categoryId;
+      showLoading(enabled ? 'Ativando respostas...' : 'Desativando respostas...');
+      try {
+        var res = await fetch('/email/categories/' + categoryId, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ repliesEnabled: enabled })
+        });
+        await res.json();
+      } catch (e) {}
+      hideLoading();
+    });
+  });
+
+  // Drag and Drop
+  let draggedEmailId = null;
+
+  document.querySelectorAll('.email-card[draggable]').forEach(function(card) {
+    card.addEventListener('dragstart', function(e) {
+      draggedEmailId = this.dataset.emailId;
+      this.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+    });
+    card.addEventListener('dragend', function() {
+      this.classList.remove('dragging');
+      document.querySelectorAll('.email-list, .category-tab').forEach(function(l) {
+        l.classList.remove('drag-over');
+      });
+    });
+  });
+
+  function moveEmail(emailId, newCategory) {
+    return fetch('/email/emails/' + emailId + '/category', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ category: newCategory })
+    }).then(function(res) { return res.json(); });
+  }
+
+  document.querySelectorAll('.email-list').forEach(function(list) {
+    list.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      this.classList.add('drag-over');
+    });
+    list.addEventListener('dragleave', function() {
+      this.classList.remove('drag-over');
+    });
+    list.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      if (!draggedEmailId) return;
+      var newCategory = this.dataset.category;
+      var emailCard = document.querySelector('.email-card[data-email-id="' + draggedEmailId + '"]');
+      if (!emailCard) return;
+      var oldCategory = emailCard.closest('.email-list').dataset.category;
+      if (oldCategory === newCategory) return;
+      showLoading('Movendo e-mail...');
+      moveEmail(draggedEmailId, newCategory).then(function(data) {
+        hideLoading();
+        if (data.success) { location.reload(); }
+        else { alert(data.error || 'Erro ao mover e-mail.'); }
+      }).catch(function() { hideLoading(); alert('Erro de conexão.'); });
+    });
+  });
+
+  document.querySelectorAll('.category-tab').forEach(function(tab) {
+    tab.addEventListener('dragover', function(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      this.classList.add('drag-over');
+    });
+    tab.addEventListener('dragleave', function() {
+      this.classList.remove('drag-over');
+    });
+    tab.addEventListener('drop', function(e) {
+      e.preventDefault();
+      this.classList.remove('drag-over');
+      if (!draggedEmailId) return;
+      var newCategory = this.dataset.categoryName;
+      var emailCard = document.querySelector('.email-card[data-email-id="' + draggedEmailId + '"]');
+      if (!emailCard) return;
+      var oldCategory = emailCard.closest('.email-list').dataset.category;
+      if (oldCategory === newCategory) return;
+      showLoading('Movendo e-mail...');
+      moveEmail(draggedEmailId, newCategory).then(function(data) {
+        hideLoading();
+        if (data.success) { location.reload(); }
+        else { alert(data.error || 'Erro ao mover e-mail.'); }
+      }).catch(function() { hideLoading(); alert('Erro de conexão.'); });
+    });
+  });
+})();
+</script>
+
+</main>
+<%- include('partials/footer') %>
